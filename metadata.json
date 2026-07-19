@@ -1,0 +1,6 @@
+{
+  "name": "Pizza NYC - PWA & Admin Portal",
+  "description": "A modern, high-end New York style Pizza restaurant PWA featuring live tracking, custom builds, dynamic order sync, and fully featured admin back-office.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

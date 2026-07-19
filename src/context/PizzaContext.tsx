@@ -76,6 +76,7 @@ interface PizzaContextType {
   isAdminAuthenticated: boolean;
   setIsAdminAuthenticated: (val: boolean) => void;
   licenseCode: string;
+  publicCode: string;
   loginDueno: (codigo: string, usuario: string, pass: string) => Promise<{ ok: boolean; msg?: string }>;
   loginColab: (codigo: string, usuario: string, pass: string) => Promise<{ ok: boolean; msg?: string }>;
   logout: () => void;
@@ -926,6 +927,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isAdminAuthenticated,
       setIsAdminAuthenticated,
       licenseCode,
+      publicCode,
       loginDueno,
       loginColab,
       logout,

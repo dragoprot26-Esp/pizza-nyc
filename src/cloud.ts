@@ -222,3 +222,9 @@ export async function pizzaVersion(codigo: string): Promise<string> {
   try { const r = await rpc('pizza_version', { p_codigo: codigo }, false); return typeof r === 'string' ? r : String(r || ''); }
   catch (e) { return ''; }
 }
+
+// Estado en vivo de UN pedido por su código (para el seguimiento del cliente, sin login).
+export async function pizzaEstadoPedido(codigo: string, orderCode: string): Promise<any | null> {
+  try { return await rpc('pizza_estado_pedido', { p_codigo: codigo, p_order_code: orderCode }, false); }
+  catch (e) { return null; }
+}

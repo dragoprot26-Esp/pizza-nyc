@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePizza } from "../context/PizzaContext";
 import { OrderStatus } from "../types";
+import { pizzaEstadoPedido } from "../cloud";
 import { Search, Flame, Truck, CheckCircle2, Clock, MapPin, Phone, MessageSquare } from "lucide-react";
 
 interface OrderTrackerProps {
@@ -14,19 +15,42 @@ interface OrderTrackerProps {
 }
 
 export const OrderTracker: React.FC<OrderTrackerProps> = ({ initialCode = "", onClose }) => {
-  const { orders, currentTheme } = usePizza();
+  const { orders, currentTheme, publicCode } = usePizza();
   const [searchCode, setSearchCode] = useState(initialCode);
-  const [trackedOrder, setTrackedOrder] = useState(
+  const [trackedOrder, setTrackedOrder] = useState<any>(
     initialCode ? orders.find(o => o.code.toUpperCase() === initialCode.toUpperCase()) : undefined
   );
   const [searched, setSearched] = useState(!!initialCode);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const found = orders.find(o => o.code.toUpperCase() === searchCode.trim().toUpperCase());
+  // Busca el pedido: primero en la nube (estado en vivo) y si no, en lo local.
+  const buscar = async (code: string) => {
+    const c = (code || "").trim().toUpperCase();
+    if (!c) return;
+    let found: any = orders.find(o => o.code.toUpperCase() === c);
+    if (publicCode) {
+      const cloudO = await pizzaEstadoPedido(publicCode, c);
+      if (cloudO) found = cloudO;
+    }
     setTrackedOrder(found);
     setSearched(true);
   };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    buscar(searchCode);
+  };
+
+  // Búsqueda inicial (si vino un código) y refresco en vivo cada 15s desde la nube.
+  useEffect(() => { if (initialCode) buscar(initialCode); }, []);
+  useEffect(() => {
+    if (!publicCode || !trackedOrder || !trackedOrder.code) return;
+    const code = trackedOrder.code;
+    const iv = setInterval(async () => {
+      const cloudO = await pizzaEstadoPedido(publicCode, code);
+      if (cloudO) setTrackedOrder(cloudO);
+    }, 15000);
+    return () => clearInterval(iv);
+  }, [publicCode, trackedOrder?.code]);
 
   const steps = [
     { status: OrderStatus.PENDING, label: "Recibido", desc: "Cola de preparación", icon: Clock },

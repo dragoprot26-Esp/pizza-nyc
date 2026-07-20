@@ -9,10 +9,29 @@ import { CustomerView } from "./components/CustomerView";
 import { AdminView } from "./components/AdminView";
 import { Bell, Info, Shield, ShoppingBag, X } from "lucide-react";
 
+const MaintenanceScreen: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center p-6 bg-[#0a0a0a] text-gray-100 font-sans">
+    <div className="max-w-md w-full text-center bg-[#151515] border border-white/10 rounded-3xl p-8 shadow-2xl">
+      <div className="text-5xl mb-4">🛠️</div>
+      <h1 className="text-2xl font-black tracking-tight mb-2">En Mantenimiento</h1>
+      <p className="text-sm text-gray-400 leading-relaxed">
+        Estamos trabajando para brindarte una mejor experiencia. La página vuelve muy pronto.
+        <br /><br />¡Gracias por tu paciencia! Saludos cordiales. 🙌
+      </p>
+      <div className="mt-6 h-1 w-16 bg-red-600 rounded-full mx-auto"></div>
+    </div>
+  </div>
+);
+
 const MainApp: React.FC = () => {
   const [viewMode, setViewMode] = useState<"customer" | "admin">("customer");
-  const { notifications, currentTheme } = usePizza();
+  const { notifications, currentTheme, bloqueada, publicCode } = usePizza();
   const [activeNotification, setActiveNotification] = useState<any>(null);
+
+  // Kill switch: si el dueño bloqueó la pública, el visitante ve "En Mantenimiento".
+  if (bloqueada && publicCode) {
+    return <MaintenanceScreen />;
+  }
 
   useEffect(() => {
     if (notifications.length > 0) {

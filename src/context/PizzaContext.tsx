@@ -77,6 +77,7 @@ interface PizzaContextType {
   setIsAdminAuthenticated: (val: boolean) => void;
   licenseCode: string;
   publicCode: string;
+  bloqueada: boolean;
   loginDueno: (codigo: string, usuario: string, pass: string) => Promise<{ ok: boolean; msg?: string }>;
   loginColab: (codigo: string, usuario: string, pass: string) => Promise<{ ok: boolean; msg?: string }>;
   logout: () => void;
@@ -319,6 +320,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [licenseCode, setLicenseCode] = useState<string>("");
   const [publicCode, setPublicCode] = useState<string>("");
+  const [bloqueada, setBloqueada] = useState<boolean>(false);
   const hydratingRef = React.useRef(false);
   const saveTimerRef = React.useRef<any>(null);
 
@@ -834,6 +836,8 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const cargar = async () => {
       const d = await pizzaPublica(code);
       if (!d) return;
+      if ((d as any).bloqueada) { setBloqueada(true); return; }  // kill switch: local en mantenimiento
+      setBloqueada(false);
       hydratingRef.current = true;
       if (d.products) setProducts(d.products);
       if (d.categories) setCategories(d.categories);
@@ -928,6 +932,7 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setIsAdminAuthenticated,
       licenseCode,
       publicCode,
+      bloqueada,
       loginDueno,
       loginColab,
       logout,

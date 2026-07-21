@@ -28,11 +28,6 @@ const MainApp: React.FC = () => {
   const { notifications, currentTheme, bloqueada, publicCode } = usePizza();
   const [activeNotification, setActiveNotification] = useState<any>(null);
 
-  // Kill switch: si el dueño bloqueó la pública, el visitante ve "En Mantenimiento".
-  if (bloqueada && publicCode) {
-    return <MaintenanceScreen />;
-  }
-
   useEffect(() => {
     if (notifications.length > 0) {
       setActiveNotification(notifications[0]);
@@ -42,6 +37,12 @@ const MainApp: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [notifications]);
+
+  // Kill switch: si el dueño bloqueó la pública, el visitante ve "En Mantenimiento".
+  // (Va DESPUÉS de todos los hooks: React no permite retornar antes de ejecutarlos.)
+  if (bloqueada && publicCode) {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <div className={`relative min-h-screen ${currentTheme.bg} selection:bg-red-600 selection:text-white`}>

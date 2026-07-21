@@ -810,7 +810,38 @@ export const PizzaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!licenseCode || !isAdminAuthenticated || hydratingRef.current) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => { cloudSave(licenseCode, snapshot()); }, 1200);
+    saveTimerRef.current = setTimeout(async () => {
+      // Guardado NO destructivo: traemos lo último de la nube y sumamos lo que no
+      // tenemos (pedidos/opiniones que entraron desde la pública mientras el panel
+      // estaba abierto). Si no, los pisaríamos al guardar.
+      const snap = snapshot() as any;
+      try {
+        const remoto = (await cloudLoad(licenseCode)) as any;
+        if (remoto) {
+          if (Array.isArray(remoto.orders)) {
+            const ids = new Set((snap.orders || []).map((o: any) => o.id));
+            const faltantes = remoto.orders.filter((o: any) => !ids.has(o.id));
+            if (faltantes.length) {
+              snap.orders = [...faltantes, ...(snap.orders || [])];
+              hydratingRef.current = true;
+              setOrders(snap.orders);
+              setTimeout(() => { hydratingRef.current = false; }, 300);
+            }
+          }
+          if (Array.isArray(remoto.comments)) {
+            const ids = new Set((snap.comments || []).map((c: any) => c.id));
+            const faltantes = remoto.comments.filter((c: any) => !ids.has(c.id));
+            if (faltantes.length) {
+              snap.comments = [...faltantes, ...(snap.comments || [])];
+              hydratingRef.current = true;
+              setComments(snap.comments);
+              setTimeout(() => { hydratingRef.current = false; }, 300);
+            }
+          }
+        }
+      } catch (e) { /* si falla la lectura, guardamos igual lo local */ }
+      cloudSave(licenseCode, snap);
+    }, 1200);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [products, categories, orders, comments, tenantConfig, collaborators, selectedThemeId, licenseCode, isAdminAuthenticated]);
 
